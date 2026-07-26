@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopSphere - Multi-Vendor RDBMS Shopping Platform</title>
+  
+  <!-- FontAwesome 6 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ==========================================
+       HEADER & NAVIGATION BAR
+       ========================================== -->
+  <header class="header-nav">
+    <div class="header-container">
+      
+      <!-- Brand Logo -->
+      <div class="brand-logo" onclick="App.switchRole('customer')">
+        <div class="brand-icon">
+          <i class="fa-solid fa-cubes-stacked"></i>
+        </div>
+        ShopSphere
+      </div>
+
+      <!-- Global Search & Autocomplete -->
+      <div class="search-wrapper">
+        <div class="search-input-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="globalSearchInput" placeholder="Search across multi-vendor catalog by product title or keyword..." autocomplete="off">
+        </div>
+        <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+      </div>
+
+      <!-- Header Right Actions & Role Selector -->
+      <div class="nav-actions">
+        <!-- Cart Badge Button -->
+        <button class="cart-badge-btn" onclick="App.switchRole('checkout')" title="View Shopping Cart & Checkout">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span class="cart-badge-count" id="cartBadgeCount">2</span>
+        </button>
+
+        <!-- Role Switcher Dropdown -->
+        <select class="role-switcher-select" id="roleSelectHeader">
+          <option value="customer">Role: Customer Storefront</option>
+          <option value="vendor">Role: Vendor Dashboard</option>
+          <option value="admin">Role: Platform Admin Portal</option>
+          <option value="checkout">Role: Multi-Vendor Cart & Checkout</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- Role Tabs Bar -->
+    <div class="role-tabs-bar">
+      <div class="role-tabs-container">
+        <button class="tab-btn active" data-role="customer">
+          <i class="fa-solid fa-store"></i> Customer Catalog
+        </button>
+        <button class="tab-btn" data-role="vendor">
+          <i class="fa-solid fa-chart-line"></i> Vendor Sales & Inventory
+        </button>
+        <button class="tab-btn" data-role="admin">
+          <i class="fa-solid fa-user-shield"></i> Platform Admin Portal
+        </button>
+        <button class="tab-btn" data-role="checkout">
+          <i class="fa-solid fa-credit-card"></i> Multi-Vendor Checkout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       MAIN CONTENT CONTAINER
+       ========================================== -->
+  <main class="main-wrapper">
+
+    <!-- ----------------------------------------------------
+         VIEW 1: CUSTOMER STOREFRONT & MULTI-VENDOR CATALOG
+         ---------------------------------------------------- -->
+    <section id="view-customer" class="view-section active">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title"><i class="fa-solid fa-border-all"></i> Multi-Vendor Product Catalog</h1>
+          <p class="section-subtitle">Simulating real-time relational joins across Product, Vendor, Category, Inventory, and Review entities.</p>
+        </div>
+      </div>
+
+      <div class="storefront-layout">
+        
+        <!-- Sidebar Filters -->
+        <aside class="glass-panel filter-sidebar">
+          <h3 style="font-family:var(--font-heading); font-size:1.1rem; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.5rem;">
+            <i class="fa-solid fa-filter" style="color:var(--primary-blue);"></i> Relational Filters
+          </h3>
+
+          <!-- Category Checkboxes -->
+          <div class="filter-group">
+            <div class="filter-title">Categories</div>
+            <label class="checkbox-label">
+              <input type="checkbox" class="cat-checkbox filter-control" value="CAT-12"> Laptops & Audio
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" class="cat-checkbox filter-control" value="CAT-11"> Smartphones & Tablets
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" class="cat-checkbox filter-control" value="CAT-21"> Men's Apparel
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" class="cat-checkbox filter-control" value="CAT-22"> Women's Apparel
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" class="cat-checkbox filter-control" value="CAT-3"> Groceries & Fresh
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" class="cat-checkbox filter-control" value="CAT-4"> Home Essentials
+            </label>
+          </div>
+
+          <!-- Price Range Slider -->
+          <div class="filter-group">
+            <div class="filter-title">Max Base Price</div>
+            <div class="price-range-container">
+              <input type="range" id="priceRangeSlider" class="price-range-slider filter-control" min="10" max="2000" step="10" value="2000" oninput="document.getElementById('priceVal').innerText = '$' + this.value">
+              <div class="price-val-display">
+                <span>$10</span>
+                <span id="priceVal">$2000</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vendor Selector Filter -->
+          <div class="filter-group">
+            <div class="filter-title">Select Vendor</div>
+            <select id="vendorFilterSelect" class="form-control filter-control">
+              <option value="ALL">All Approved Vendors</option>
+              <option value="VND-10">TechHub (4.8 ★)</option>
+              <option value="VND-12">FashionCraft (4.6 ★)</option>
+              <option value="VND-15">GreenGrocery (4.9 ★)</option>
+            </select>
+          </div>
+
+          <!-- Minimum Star Rating -->
+          <div class="filter-group">
+            <div class="filter-title">Minimum Star Rating</div>
+            <div class="rating-stars-filter">
+              <span class="rating-option active" data-stars="1">1★+</span>
+              <span class="rating-option" data-stars="3">3★+</span>
+              <span class="rating-option" data-stars="4">4★+</span>
+              <span class="rating-option" data-stars="5">5★</span>
+            </div>
+          </div>
+
+          <!-- In Stock Only Switch -->
+          <div class="filter-group">
+            <label class="switch-label">
+              <span style="font-weight:600; font-size:0.9rem;">In-Stock Only</span>
+              <input type="checkbox" id="inStockOnlyToggle" class="switch-input filter-control">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+        </aside>
+
+        <!-- Product Card Grid -->
+        <div id="productGrid" class="product-grid">
+          <!-- Populated by App.renderStorefrontCatalog() -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------
+         VIEW 2: VENDOR INVENTORY & SALES DASHBOARD
+         ---------------------------------------------------- -->
+    <section id="view-vendor" class="view-section">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title"><i class="fa-solid fa-chart-line"></i> Vendor Sales & Inventory Portal</h1>
+          <p class="section-subtitle">Real-time inventory thresholds, alert triggers, and multi-vendor order fulfillment.</p>
+        </div>
+        <button class="btn-action btn-primary" onclick="App.openAddProductModal()">
+          <i class="fa-solid fa-plus"></i> Add New Product
+        </button>
+      </div>
+
+      <!-- KPI Summary Widgets -->
+      <div class="kpi-grid">
+        <div class="glass-card kpi-card">
+          <div class="kpi-info">
+            <h4>Total Revenue</h4>
+            <div class="kpi-val" id="kpiTotalRev">$0.00</div>
+          </div>
+          <div class="kpi-icon blue"><i class="fa-solid fa-sack-dollar"></i></div>
+        </div>
+
+        <div class="glass-card kpi-card">
+          <div class="kpi-info">
+            <h4>Orders Processed</h4>
+            <div class="kpi-val" id="kpiTotalOrders">0</div>
+          </div>
+          <div class="kpi-icon purple"><i class="fa-solid fa-boxes-packing"></i></div>
+        </div>
+
+        <div class="glass-card kpi-card">
+          <div class="kpi-info">
+            <h4>Active Products</h4>
+            <div class="kpi-val" id="kpiActiveProducts">0</div>
+          </div>
+          <div class="kpi-icon green"><i class="fa-solid fa-tags"></i></div>
+        </div>
+
+        <div class="glass-card kpi-card">
+          <div class="kpi-info">
+            <h4>Low Stock Trigger Warnings</h4>
+            <div class="kpi-val" id="kpiLowStock">0</div>
+          </div>
+          <div class="kpi-icon amber"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        </div>
+      </div>
+
+      <!-- Real-Time Inventory Table -->
+      <h3 style="font-family:var(--font-heading); margin-bottom:0.75rem;">
+        <i class="fa-solid fa-warehouse" style="color:var(--primary-blue);"></i> Real-Time Inventory Management Table
+      </h3>
+      <div class="table-responsive glass-panel" style="margin-bottom:2rem;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Unit Price ($)</th>
+              <th>Current Stock</th>
+              <th>Low Stock Threshold</th>
+              <th>Trigger Alert Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="vendorInventoryTbody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Order Fulfillment Queue Panel -->
+      <h3 style="font-family:var(--font-heading); margin-bottom:0.75rem;">
+        <i class="fa-solid fa-truck-ramp-box" style="color:var(--primary-purple);"></i> Multi-Vendor Order Fulfillment Queue
+      </h3>
+      <div class="table-responsive glass-panel">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer Name</th>
+              <th>Total Amount</th>
+              <th>Date Placed</th>
+              <th>Order Fulfillment Status</th>
+            </tr>
+          </thead>
+          <tbody id="vendorOrdersTbody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------
+         VIEW 3: PLATFORM ADMIN PORTAL (CRITICAL VIEW)
+         ---------------------------------------------------- -->
+    <section id="view-admin" class="view-section">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title"><i class="fa-solid fa-user-shield"></i> Platform Admin Management Portal</h1>
+          <p class="section-subtitle">Oversee vendor approvals, category hierarchy, system latency, and live database trigger logs.</p>
+        </div>
+        <div class="sys-metric-badge" id="sysLatencyMetric">
+          <i class="fa-solid fa-microchip"></i> DB Query Latency: <strong>42ms</strong> | Active Locks: <strong>0</strong>
+        </div>
+      </div>
+
+      <!-- Admin Overview KPI -->
+      <div class="kpi-grid">
+        <div class="glass-card kpi-card">
+          <div class="kpi-info">
+            <h4>Gross Platform Revenue</h4>
+            <div class="kpi-val" id="adminGrossRevenue">$0.00</div>
+          </div>
+          <div class="kpi-icon green"><i class="fa-solid fa-chart-pie"></i></div>
+        </div>
+
+        <div class="glass-card kpi-card">
+          <div class="kpi-info">
+            <h4>Active Approved Vendors</h4>
+            <div class="kpi-val" id="adminActiveVendors">0</div>
+          </div>
+          <div class="kpi-icon blue"><i class="fa-solid fa-store"></i></div>
+        </div>
+
+        <div class="glass-card kpi-card">
+          <div class="kpi-info">
+            <h4>Total Registered Customers</h4>
+            <div class="kpi-val" id="adminCustomerCount">0</div>
+          </div>
+          <div class="kpi-icon purple"><i class="fa-solid fa-users"></i></div>
+        </div>
+
+        <div class="glass-card kpi-card">
+          <div class="kpi-info">
+            <h4>Active Categories</h4>
+            <div class="kpi-val" id="adminCategoryCount">0</div>
+          </div>
+          <div class="kpi-icon amber"><i class="fa-solid fa-sitemap"></i></div>
+        </div>
+      </div>
+
+      <!-- Vendor Approval Workflow Table -->
+      <h3 style="font-family:var(--font-heading); margin-bottom:0.75rem;">
+        <i class="fa-solid fa-user-check" style="color:var(--primary-blue);"></i> Vendor Approval Workflow Table
+      </h3>
+      <div class="table-responsive glass-panel" style="margin-bottom:2rem;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Vendor ID</th>
+              <th>Store Name</th>
+              <th>Contact Email</th>
+              <th>Business License ID</th>
+              <th>Approval Status</th>
+              <th>Action Buttons</th>
+            </tr>
+          </thead>
+          <tbody id="adminVendorsTbody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Category Hierarchy Manager & Live Trigger Log Grid -->
+      <div class="admin-grid">
+        
+        <!-- Category Hierarchy Tree -->
+        <div class="glass-panel tree-container">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.5rem;">
+            <h3 style="font-family:var(--font-heading);">
+              <i class="fa-solid fa-sitemap" style="color:var(--primary-purple);"></i> Category Hierarchy Manager
+            </h3>
+            <button class="btn-action btn-primary" onclick="App.promptAddParentCategory()">
+              <i class="fa-solid fa-plus"></i> Add Parent
+            </button>
+          </div>
+          <div id="categoryTreeContainer">
+            <!-- Tree populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Database Trigger & Event Alert Log -->
+        <div class="glass-panel" style="padding:1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.5rem;">
+            <h3 style="font-family:var(--font-heading);">
+              <i class="fa-solid fa-terminal" style="color:var(--color-success);"></i> Real-Time DB Trigger & Event Alert Log
+            </h3>
+            <span class="badge badge-green">LIVE LISTENER</span>
+          </div>
+          <div class="trigger-log-box" id="triggerLogBox">
+            <!-- Logs populated dynamically -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------
+         VIEW 4: MULTI-VENDOR CART & ATOMIC CHECKOUT
+         ---------------------------------------------------- -->
+    <section id="view-checkout" class="view-section">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title"><i class="fa-solid fa-cart-shopping"></i> Multi-Vendor Shopping Cart & Atomic Checkout</h1>
+          <p class="section-subtitle">Grouped vendor sub-carts, real-time coupon validation, and atomic SQL transaction simulation.</p>
+        </div>
+      </div>
+
+      <div class="checkout-layout">
+        
+        <!-- Cart Items Grouped by Vendor -->
+        <div>
+          <div id="vendorCartContainer">
+            <!-- Grouped by vendor dynamically -->
+          </div>
+
+          <!-- Coupon & Discount Engine -->
+          <div class="glass-panel" style="padding:1.25rem; margin-top:1.5rem;">
+            <h4 style="font-family:var(--font-heading); font-size:1.05rem;">
+              <i class="fa-solid fa-ticket" style="color:var(--primary-purple);"></i> Apply Coupon Code
+            </h4>
+            <p style="font-size:0.85rem; color:var(--text-muted);">Try codes: <code>SAVE15</code> (15% off), <code>SHOPSPHERE10</code> (10% off), or <code>DBMS2026</code> (20% off)</p>
+            <div class="coupon-box">
+              <input type="text" id="couponInput" class="coupon-input" placeholder="ENTER COUPON CODE">
+              <button class="btn-action btn-primary" onclick="App.applyCouponCode()">Apply Coupon</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Atomic Checkout Action Box -->
+        <div>
+          <div class="glass-panel order-summary-card">
+            <h3 style="font-family:var(--font-heading); font-size:1.3rem; margin-bottom:1.25rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.5rem;">
+              Order Summary & Breakdown
+            </h3>
+
+            <div class="summary-row">
+              <span>Items Subtotal</span>
+              <span id="summarySubtotal">$0.00</span>
+            </div>
+
+            <div class="summary-row" style="color:var(--color-success);">
+              <span>Coupon Discount</span>
+              <span id="summaryDiscount">-$0.00</span>
+            </div>
+
+            <div class="summary-row">
+              <span>Shipping Fee</span>
+              <span id="summaryShipping">$15.00</span>
+            </div>
+
+            <div class="summary-row total">
+              <span>Total Payable</span>
+              <span id="summaryTotal" style="color:var(--primary-blue);">$0.00</span>
+            </div>
+
+            <!-- Payment Mode Selector -->
+            <div class="payment-modes">
+              <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem; font-weight:600;">Select Payment Method:</div>
+              <div class="payment-option active" onclick="App.selectPaymentMode('Credit/Debit Card', this)">
+                <i class="fa-solid fa-credit-card" style="color:var(--primary-blue);"></i>
+                <span style="font-size:0.9rem;">Credit / Debit Card</span>
+              </div>
+              <div class="payment-option" onclick="App.selectPaymentMode('UPI / NetBanking', this)">
+                <i class="fa-solid fa-mobile-screen-button" style="color:var(--primary-purple);"></i>
+                <span style="font-size:0.9rem;">UPI / NetBanking</span>
+              </div>
+              <div class="payment-option" onclick="App.selectPaymentMode('Cash on Delivery', this)">
+                <i class="fa-solid fa-money-bill-wave" style="color:var(--color-success);"></i>
+                <span style="font-size:0.9rem;">Cash on Delivery</span>
+              </div>
+            </div>
+
+            <button class="btn-checkout-atomic" onclick="App.executeAtomicCheckout()">
+              <i class="fa-solid fa-lock"></i> Complete Order (Simulate DBMS Transaction)
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================
+       MODALS & OVERLAYS
+       ========================================== -->
+
+  <!-- Modal 1: Update Stock -->
+  <div class="modal-overlay" id="stockModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Update Stock & Low-Stock Threshold</h3>
+        <button class="close-modal-btn" onclick="App.closeModal('stockModalOverlay')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input type="hidden" id="editInvId">
+      <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;" id="editStockTitle">Product Title</p>
+
+      <div class="form-group">
+        <label class="form-label">Current Stock Quantity</label>
+        <input type="number" id="editStockInput" class="form-control" min="0">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Low Stock Warning Threshold</label>
+        <input type="number" id="editThresholdInput" class="form-control" min="1">
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem;">
+        <button class="btn-action btn-outline" onclick="App.closeModal('stockModalOverlay')">Cancel</button>
+        <button class="btn-action btn-primary" onclick="App.saveStockUpdate()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Add New Product -->
+  <div class="modal-overlay" id="addProductModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Product to Inventory</h3>
+        <button class="close-modal-btn" onclick="App.closeModal('addProductModalOverlay')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="App.saveNewProduct(event)">
+        <div class="form-group">
+          <label class="form-label">Product Title</label>
+          <input type="text" id="newProdTitle" class="form-control" required placeholder="e.g. Wireless Smart Watch">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Select Category</label>
+          <select id="newProdCat" class="form-control" required>
+            <option value="CAT-12">Laptops & Audio</option>
+            <option value="CAT-11">Smartphones & Tablets</option>
+            <option value="CAT-21">Men's Apparel</option>
+            <option value="CAT-22">Women's Apparel</option>
+            <option value="CAT-3">Groceries & Fresh</option>
+            <option value="CAT-4">Home Essentials</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Select Vendor Store</label>
+          <select id="newProdVendor" class="form-control" required>
+            <option value="VND-10">TechHub</option>
+            <option value="VND-12">FashionCraft</option>
+            <option value="VND-15">GreenGrocery</option>
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label class="form-label">Base Price ($)</label>
+            <input type="number" step="0.01" id="newProdPrice" class="form-control" required placeholder="99.99">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Initial Stock Level</label>
+            <input type="number" id="newProdStock" class="form-control" required placeholder="25">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Product Description</label>
+          <textarea id="newProdDesc" class="form-control" rows="3" required placeholder="Detailed product specifications..."></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem;">
+          <button type="button" class="btn-action btn-outline" onclick="App.closeModal('addProductModalOverlay')">Cancel</button>
+          <button type="submit" class="btn-action btn-primary">Create Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: Atomic Transaction Simulator Terminal -->
+  <div class="modal-overlay" id="transactionModalOverlay">
+    <div class="modal-card" style="max-width:600px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-server" style="color:var(--primary-blue);"></i> Executing Atomic SQL Transaction</h3>
+        <button class="close-modal-btn" onclick="App.closeModal('transactionModalOverlay')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p style="font-size:0.85rem; color:var(--text-muted);">
+        Simulating ACID properties (Atomicity, Consistency, Isolation, Durability) across Order, Payment, and Inventory tables.
+      </p>
+      
+      <div class="sql-terminal-box" id="sqlTerminalBox">
+        <!-- Terminal lines injected live -->
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-top:1.25rem;">
+        <button class="btn-action btn-primary" onclick="App.closeModal('transactionModalOverlay')">Done / Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- App Script -->
+  <script src="app.js"></script>
+</body>
+</html>
