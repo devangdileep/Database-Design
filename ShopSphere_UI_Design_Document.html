@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>UI Design Document</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 1in;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Times New Roman", Times, serif;
+      color: #000000;
+      background: #ffffff;
+      font-size: 12pt;
+      line-height: 1.5;
+    }
+
+    .page {
+      width: 210mm;
+      height: 297mm;
+      padding: 1in;
+      position: relative;
+      page-break-after: always;
+      background: #ffffff;
+    }
+
+    /* Page Outer Border Box matching original template (as seen in screenshots, there is a border) */
+    .page-border {
+      position: absolute;
+      top: 0.5in;
+      left: 0.5in;
+      right: 0.5in;
+      bottom: 0.5in;
+      border: 1px solid #000000;
+      pointer-events: none;
+    }
+
+    .header-center {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header-center h1 {
+      font-size: 14pt;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .header-center h2 {
+      font-size: 13pt;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .header-center h3 {
+      font-size: 13pt;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .doc-title {
+      font-size: 13pt;
+      font-weight: bold;
+      margin-top: 25px;
+      margin-bottom: 30px;
+    }
+
+    .field-row {
+      margin-bottom: 15px;
+      display: flex;
+    }
+
+    .field-label {
+      width: 140px;
+    }
+
+    table.data-table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    table.data-table th, table.data-table td {
+      border: 1px solid #000000;
+      padding: 5px 8px;
+      text-align: left;
+    }
+
+    table.data-table th {
+      background-color: #d9d9d9;
+      font-weight: normal;
+    }
+
+    .section-title {
+      font-size: 12pt;
+      margin-top: 25px;
+      margin-bottom: 15px;
+    }
+    
+    .section-content {
+      margin-left: 50px;
+      margin-bottom: 15px;
+    }
+
+    .item-list {
+      list-style-type: none;
+      margin-left: 50px;
+    }
+
+    .item-list li {
+      margin-bottom: 10px;
+    }
+
+    .item-list-number {
+      display: inline-block;
+      width: 20px;
+    }
+
+    .page-num {
+      position: absolute;
+      bottom: 0.6in;
+      right: 0.8in;
+      font-size: 12pt;
+    }
+
+    .screenshot-img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= PAGE 1 ================= -->
+  <div class="page">
+    <div class="page-border"></div>
+
+    <div class="header-center">
+      <h1>23CSE202 DATABASE MANAGEMENT SYSTEMS</h1>
+      <h2>S3 B.Tech CSE</h2>
+      <h3>Department of Computer Science and Engineering</h3>
+      <h3>Amrita School of Computing, Amritapuri Campus</h3>
+      <div class="doc-title">2. UI Design Document</div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-label">Group No</div>
+      <div>: C15</div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-label">Team Members</div>
+      <div style="flex-grow: 1;">
+        <div>:</div>
+        <table class="data-table" style="width: 80%; margin-top: 5px;">
+          <thead>
+            <tr>
+              <th style="width: 40%;">Roll No</th>
+              <th style="width: 60%;">Student Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>AM.SC.U4CSE25251</td>
+              <td>SRAVAN N N</td>
+            </tr>
+            <tr>
+              <td>AM.SC.U4CSE25222</td>
+              <td>HARITH BHUVAN S</td>
+            </tr>
+            <tr>
+              <td>AM.SC.U4CSE25213</td>
+              <td>DEVANG DILEEP</td>
+            </tr>
+            <tr>
+              <td>AM.SC.U4CSE25233</td>
+              <td>JASIMKHAN J L</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="field-row" style="margin-top: 30px;">
+      <div class="field-label">Project Title</div>
+      <div>: ShopSphere: A Relational Database Management System for a Multi-Vendor Online Shopping Platform</div>
+    </div>
+
+    <div class="section-title">2.1. Functional requirements:</div>
+    <ul class="item-list">
+      <li><span class="item-list-number">1.</span>Multi-Role Navigation: Switch between Customer Storefront, Vendor Dashboard, Admin Portal, and Cart & Atomic Checkout.</li>
+      <li><span class="item-list-number">2.</span>Multi-Vendor Catalogue & Autocomplete Search: Product search with autocomplete, category pills, and multi-criteria filters.</li>
+      <li><span class="item-list-number">3.</span>Vendor Inventory & Order Fulfillment: Real-time inventory table with automated low-stock trigger alerts and order fulfillment queue.</li>
+    </ul>
+
+    <div class="section-title">2.2. Non functional requirements:</div>
+    <ul class="item-list">
+      <li><span class="item-list-number">1.</span>Responsiveness & Layout: Mobile-first flexible CSS Grid layout with left sidebar, top search capsule, and bottom dock.</li>
+      <li><span class="item-list-number">2.</span>Design Aesthetic: Dark Glassmorphism canvas, backdrop blur, electric blue accents.</li>
+      <li><span class="item-list-number">3.</span>Reactivity & Micro-animations: Smooth Framer Motion card lift effects and button micro-feedback.</li>
+    </ul>
+
+    <div class="section-title">2.3. List of AI tools used for building UI(if any):</div>
+    <ul class="item-list">
+      <li><span class="item-list-number">1.</span>Antigravity AI (Google DeepMind)</li>
+      <li><span class="item-list-number">2.</span></li>
+      <li><span class="item-list-number">3.</span></li>
+    </ul>
+
+    <div class="page-num">1</div>
+  </div>
+
+  <!-- ================= PAGE 2 ================= -->
+  <div class="page">
+    <div class="page-border"></div>
+
+    <div class="section-title" style="margin-top: 20px;">2.4. Prompt (if any) :</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 10%;">Sl. No</th>
+          <th style="width: 25%;">Name of the tool</th>
+          <th style="width: 65%;">prompts</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Antigravity AI</td>
+          <td>Act as a Principal UI/UX Architect and Lead Frontend Engineer. Build a production-grade Web UI for ShopSphere RDBMS...</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Antigravity AI</td>
+          <td>Migrate fully into Next.js with Supabase backend matching attached dark glassmorphism design with proper animations.</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>Antigravity AI</td>
+          <td>Convert all listed product prices, total revenues, subtotal, and order breakdown figures into Indian Rupees (₹).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section-title">2.5. List of files:</div>
+    <div class="section-content" style="line-height: 1.8;">
+      app/layout.tsx, app/page.tsx, app/globals.css<br>
+      components/Sidebar.tsx, components/Header.tsx<br>
+      components/CategoryPills.tsx, components/ProductCard.tsx<br>
+      components/RightDrawer.tsx, components/BottomDock.tsx<br>
+      components/VendorDashboard.tsx, components/AdminPortal.tsx<br>
+      components/AtomicCheckoutModal.tsx, components/AddProductModal.tsx<br>
+      lib/supabase.ts, supabase/schema.sql
+    </div>
+
+    <div class="section-title">2.6. UI Screenshot:</div>
+    <div class="section-content">
+      <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80" class="screenshot-img" alt="UI Screenshot">
+    </div>
+
+    <div class="section-title">2.7. GitHub Link:</div>
+    <div class="section-content">
+      https://github.com/Sravan-NN/ShopSphere-DBMS
+    </div>
+
+    <div class="page-num">2</div>
+  </div>
+
+</body>
+</html>
