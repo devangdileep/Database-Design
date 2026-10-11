@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, SlidersHorizontal, Bell, MessageSquare, ShoppingCart, UserCheck } from 'lucide-react';
+import { Search, SlidersHorizontal, Bell, MessageSquare, ShoppingCart } from 'lucide-react';
 
 interface HeaderProps {
   searchQuery: string;
@@ -9,6 +9,8 @@ interface HeaderProps {
   cartCount: number;
   currentRole: string;
   onRoleChange: (role: string) => void;
+  customerName?: string;
+  customerInitials?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,6 +19,8 @@ export const Header: React.FC<HeaderProps> = ({
   cartCount,
   currentRole,
   onRoleChange,
+  customerName = 'Guest',
+  customerInitials = 'G',
 }) => {
   return (
     <header className="w-full bg-[#070a12]/80 backdrop-blur-xl border-b border-white/10 px-6 py-3.5 flex items-center justify-between gap-4 sticky top-0 z-20">
@@ -72,11 +76,11 @@ export const Header: React.FC<HeaderProps> = ({
           <MessageSquare className="w-5 h-5" />
         </button>
 
-        {/* User Profile Pill */}
+        {/* Dynamic User Profile Pill */}
         <div className="flex items-center gap-2.5 bg-[#0e1628] border border-white/10 rounded-full px-3 py-1 cursor-pointer hover:border-blue-500/40 transition-colors">
-          <span className="text-xs font-medium text-slate-300">Sarah J.</span>
+          <span className="text-xs font-medium text-slate-300">{customerName}</span>
           <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
-            SJ
+            {customerInitials}
           </div>
         </div>
 

@@ -42,20 +42,30 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({ products, onSelectProd
           </div>
 
           <div className="space-y-2.5">
-            {products.slice(0, 4).map((p) => (
-              <div
-                key={p.id}
-                onClick={() => onSelectProduct(p)}
-                className="flex items-center gap-3 bg-[#0d1527] border border-white/5 hover:border-blue-500/40 p-2.5 rounded-xl cursor-pointer transition-all hover:translate-x-1"
-              >
-                <img src={p.imageUrl} alt={p.title} className="w-12 h-12 rounded-lg object-cover bg-slate-900" />
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-xs text-slate-200 truncate">{p.title}</div>
-                  <div className="text-[11px] text-blue-400 font-bold">{formatRupees(p.price)}</div>
-                  <div className="text-[10px] text-slate-500">{p.vendorName}</div>
+            {products.length === 0 ? (
+              <div className="text-xs text-slate-500 text-center py-4">No products available</div>
+            ) : (
+              products.slice(0, 4).map((p) => (
+                <div
+                  key={p.product_id}
+                  onClick={() => onSelectProduct(p)}
+                  className="flex items-center gap-3 bg-[#0d1527] border border-white/5 hover:border-blue-500/40 p-2.5 rounded-xl cursor-pointer transition-all hover:translate-x-1"
+                >
+                  {p.image_url ? (
+                    <img src={p.image_url} alt={p.product_name} className="w-12 h-12 rounded-lg object-cover bg-slate-900" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-slate-600 text-[9px]">
+                      N/A
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-xs text-slate-200 truncate">{p.product_name}</div>
+                    <div className="text-[11px] text-blue-400 font-bold">{formatRupees(p.price)}</div>
+                    <div className="text-[10px] text-slate-500">{p.vendor_name || 'Unknown'}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}

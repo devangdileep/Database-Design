@@ -1,15 +1,21 @@
 'use client';
 
 import React from 'react';
-import { Home, LayoutGrid, ShoppingCart, FolderOpen, User, Settings, Cubes } from 'lucide-react';
+import { Home, LayoutGrid, ShoppingCart, FolderOpen, User, Settings } from 'lucide-react';
 
 interface SidebarProps {
   currentTab: string;
   onTabChange: (tab: string) => void;
   cartCount: number;
+  userInitials?: string;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange, cartCount }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  currentTab,
+  onTabChange,
+  cartCount,
+  userInitials = 'G',
+}) => {
   const navItems = [
     { id: 'storefront', label: 'Storefront', icon: Home },
     { id: 'vendor', label: 'Vendor Dashboard', icon: LayoutGrid },
@@ -62,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange, cartC
 
       {/* Bottom Profile / Settings Quick Action */}
       <div className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:border-blue-500 transition-colors cursor-pointer" title="Active Role">
-        <span className="text-xs font-semibold">SJ</span>
+        <span className="text-xs font-semibold">{userInitials}</span>
       </div>
 
     </aside>

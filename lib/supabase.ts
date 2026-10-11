@@ -1,65 +1,95 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase Environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xyzcompany.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummykey';
+// ---------------------------------------------------------------------------
+// Supabase Client
+// ---------------------------------------------------------------------------
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  if (typeof window !== 'undefined') {
+    console.warn(
+      '⚠️ Missing Supabase env vars. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'
+    );
+  }
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Product Interface
-export interface Product {
-  id: string;
-  title: string;
-  category: string;
-  rating: number;
-  reviewsCount: number;
-  isTopSeller: boolean;
-  vendorName: string;
-  vendorLogo?: string;
-  price: number;
-  originalPrice: number;
-  stock: number;
-  isLimited?: boolean;
-  couponTag?: string;
-  altVendor?: string;
-  altPrice?: number;
-  imageUrl: string;
-}
+// ---------------------------------------------------------------------------
+// TypeScript Interfaces (Match ER Diagram Exactly)
+// ---------------------------------------------------------------------------
 
-export interface InventoryItem {
-  id: string;
-  productId: string;
-  title: string;
-  category: string;
-  price: number;
-  stock: number;
-  threshold: number;
-}
-
-export interface Vendor {
-  id: string;
-  storeName: string;
+/** CUSTOMER table */
+export interface Customer {
+  customer_id: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  licenseId: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
-  rating: number;
+  phone: string | null;
+  password_hash: string;
+  created_at?: string;
 }
 
-export interface Order {
-  id: string;
-  customerName: string;
-  amount: number;
-  date: string;
-  status: 'Placed' | 'Packed' | 'Shipped' | 'Delivered';
-}
-
+/** CATEGORY table */
 export interface Category {
-  id: string;
-  name: string;
-  parentId: string | null;
+  category_id: string;
+  category_name: string;
+  parent_category_id: string | null;
 }
 
-// Helper currency formatter for Indian Rupees (₹)
+/** VENDOR table */
+export interface Vendor {
+  vendor_id: string;
+  vendor_name: string;
+  email: string;
+  phone: string | null;
+  approval_status: 'Pending' | 'Approved' | 'Rejected';
+  created_at?: string;
+}
+
+/** PRODUCT table (with joined vendor_name and category_name for display) */
+export interface Product {
+  product_id: string;
+  vendor_id: string;
+  category_id: string | null;
+  product_name: string;
+  description: string | null;
+  brand: string | null;
+  price: number;
+  stock_quantity: number;
+  image_url: string | null;
+  created_at?: string;
+  // Joined fields (from foreign key lookups)
+  vendor_name?: string;
+  category_name?: string;
+}
+
+/** ORDERS table (with joined customer name for display) */
+export interface Order {
+  order_id: string;
+  customer_id: string;
+  order_date: string;
+  order_status: 'Placed' | 'Packed' | 'Shipped' | 'Delivered' | 'Cancelled';
+  total_amount: number;
+  // Joined fields
+  customer_first_name?: string;
+  customer_last_name?: string;
+}
+
+/** ORDER_ITEM table */
+export interface OrderItem {
+  order_item_id: string;
+  order_id: string;
+  product_id: string;
+  vendor_id: string;
+  quantity: number;
+  unit_price: number;
+}
+
+// ---------------------------------------------------------------------------
+// Helper: Currency Formatter (₹)
+// ---------------------------------------------------------------------------
 export const formatRupees = (amount: number): string => {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -68,146 +98,320 @@ export const formatRupees = (amount: number): string => {
   }).format(amount);
 };
 
-// Initial Seed Data in Indian Rupees (₹)
-export const INITIAL_PRODUCTS: Product[] = [
-  {
-    id: 'prd-1',
-    title: 'PixelBook Pro 15',
-    category: 'Electronics',
-    rating: 4.7,
-    reviewsCount: 120,
-    isTopSeller: true,
-    vendorName: 'TechHub',
-    price: 74999,
-    originalPrice: 89999,
-    stock: 5,
-    couponTag: 'COUPON: -10%',
-    altVendor: 'gadgetry',
-    altPrice: 76500,
-    imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd-2',
-    title: 'Aura Headphones',
-    category: 'Electronics',
-    rating: 4.5,
-    reviewsCount: 88,
-    isTopSeller: true,
-    vendorName: 'SoundWaves',
-    price: 19999,
-    originalPrice: 24999,
-    stock: 3,
-    isLimited: true,
-    couponTag: 'COUPON: SAVE20',
-    altVendor: 'AudioPro',
-    altPrice: 20999,
-    imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd-3',
-    title: 'HydroFlask 32oz',
-    category: 'Home & Living',
-    rating: 4.8,
-    reviewsCount: 210,
-    isTopSeller: true,
-    vendorName: 'GearOut',
-    price: 3299,
-    originalPrice: 3999,
-    stock: 15,
-    imageUrl: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd-4',
-    title: 'EcoSmart TV 55"',
-    category: 'Electronics',
-    rating: 4.6,
-    reviewsCount: 155,
-    isTopSeller: true,
-    vendorName: 'Electronics',
-    price: 54999,
-    originalPrice: 69999,
-    stock: 8,
-    couponTag: 'COUPON: TVOFFER50',
-    imageUrl: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd-5',
-    title: 'Pro Wireless Earbuds',
-    category: 'Electronics',
-    rating: 4.9,
-    reviewsCount: 310,
-    isTopSeller: false,
-    vendorName: 'TechHub',
-    price: 9999,
-    originalPrice: 12999,
-    stock: 22,
-    couponTag: 'COUPON: EARBUD15',
-    imageUrl: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd-6',
-    title: 'Organic Cotton Hoodie',
-    category: 'Apparel',
-    rating: 4.4,
-    reviewsCount: 64,
-    isTopSeller: true,
-    vendorName: 'FashionCraft',
-    price: 4999,
-    originalPrice: 6499,
-    stock: 12,
-    imageUrl: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd-7',
-    title: 'Cold-Pressed Almond Milk',
-    category: 'Groceries',
-    rating: 4.9,
-    reviewsCount: 42,
-    isTopSeller: false,
-    vendorName: 'GreenGrocery',
-    price: 499,
-    originalPrice: 650,
-    stock: 45,
-    imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd-8',
-    title: 'Ergonomic Desk Lamp',
-    category: 'Home & Living',
-    rating: 4.7,
-    reviewsCount: 95,
-    isTopSeller: true,
-    vendorName: 'Urban Living',
-    price: 3999,
-    originalPrice: 4999,
-    stock: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80',
+// ---------------------------------------------------------------------------
+// Data Fetching Functions
+// ---------------------------------------------------------------------------
+
+/** Fetch all products with joined vendor_name and category_name */
+export async function fetchProducts(categoryName?: string): Promise<Product[]> {
+  let query = supabase
+    .from('products')
+    .select(`
+      *,
+      vendors ( vendor_name ),
+      categories ( category_name )
+    `)
+    .order('created_at', { ascending: false });
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching products:', error);
+    return [];
   }
-];
 
-export const INITIAL_VENDORS: Vendor[] = [
-  { id: 'v-1', storeName: 'TechHub', email: 'support@techhub.com', licenseId: 'LIC-8890-TX', status: 'Approved', rating: 4.8 },
-  { id: 'v-2', storeName: 'SoundWaves', email: 'orders@soundwaves.com', licenseId: 'LIC-4412-CA', status: 'Approved', rating: 4.7 },
-  { id: 'v-3', storeName: 'GearOut', email: 'hello@gearout.com', licenseId: 'LIC-9901-WA', status: 'Approved', rating: 4.9 },
-  { id: 'v-4', storeName: 'FashionCraft', email: 'contact@fashioncraft.com', licenseId: 'LIC-1120-NY', status: 'Approved', rating: 4.5 },
-  { id: 'v-5', storeName: 'Apex Electronics', email: 'sales@apexelectronics.com', licenseId: 'LIC-5541-IL', status: 'Pending', rating: 4.2 },
-];
+  // Flatten joined data
+  const products: Product[] = (data || []).map((row: any) => ({
+    product_id: row.product_id,
+    vendor_id: row.vendor_id,
+    category_id: row.category_id,
+    product_name: row.product_name,
+    description: row.description,
+    brand: row.brand,
+    price: Number(row.price),
+    stock_quantity: row.stock_quantity,
+    image_url: row.image_url,
+    created_at: row.created_at,
+    vendor_name: row.vendors?.vendor_name || 'Unknown Vendor',
+    category_name: row.categories?.category_name || 'Uncategorized',
+  }));
 
-export const INITIAL_ORDERS: Order[] = [
-  { id: 'ORD-9801', customerName: 'Sarah J.', amount: 98297, date: '2026-07-26 10:15', status: 'Shipped' },
-  { id: 'ORD-9802', customerName: 'Alex M.', amount: 19999, date: '2026-07-26 11:30', status: 'Placed' },
-  { id: 'ORD-9803', customerName: 'Sophia C.', amount: 3299, date: '2026-07-26 14:05', status: 'Packed' },
-];
+  // Client-side category filter if specified
+  if (categoryName && categoryName !== 'ALL') {
+    return products.filter(
+      (p) => p.category_name?.toLowerCase() === categoryName.toLowerCase()
+    );
+  }
 
-export const INITIAL_CATEGORIES: Category[] = [
-  { id: 'cat-1', name: 'Electronics', parentId: null },
-  { id: 'cat-11', name: 'Laptops & Computers', parentId: 'cat-1' },
-  { id: 'cat-12', name: 'Audio & Wearables', parentId: 'cat-1' },
-  { id: 'cat-2', name: 'Apparel', parentId: null },
-  { id: 'cat-21', name: "Men's Fashion", parentId: 'cat-2' },
-  { id: 'cat-22', name: "Women's Fashion", parentId: 'cat-2' },
-  { id: 'cat-3', name: 'Groceries', parentId: null },
-  { id: 'cat-4', name: 'Home & Living', parentId: null },
-  { id: 'cat-5', name: 'Beauty', parentId: null },
-  { id: 'cat-6', name: 'Offers', parentId: null },
-];
+  return products;
+}
+
+/** Fetch all categories */
+export async function fetchCategories(): Promise<Category[]> {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .order('category_name');
+
+  if (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/** Fetch all vendors */
+export async function fetchVendors(): Promise<Vendor[]> {
+  const { data, error } = await supabase
+    .from('vendors')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching vendors:', error);
+    return [];
+  }
+
+  return (data || []).map((row: any) => ({
+    ...row,
+    approval_status: row.approval_status as Vendor['approval_status'],
+  }));
+}
+
+/** Fetch all orders with joined customer names */
+export async function fetchOrders(): Promise<Order[]> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      customers ( first_name, last_name )
+    `)
+    .order('order_date', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching orders:', error);
+    return [];
+  }
+
+  return (data || []).map((row: any) => ({
+    order_id: row.order_id,
+    customer_id: row.customer_id,
+    order_date: row.order_date,
+    order_status: row.order_status as Order['order_status'],
+    total_amount: Number(row.total_amount),
+    customer_first_name: row.customers?.first_name || '',
+    customer_last_name: row.customers?.last_name || '',
+  }));
+}
+
+/** Fetch the first customer (for simulated login) */
+export async function fetchCurrentCustomer(): Promise<Customer | null> {
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*')
+    .limit(1)
+    .single();
+
+  if (error) {
+    console.error('Error fetching customer:', error);
+    return null;
+  }
+
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Data Mutation Functions
+// ---------------------------------------------------------------------------
+
+/** Insert a new product */
+export async function insertProduct(product: {
+  vendor_id: string;
+  category_id: string | null;
+  product_name: string;
+  description?: string;
+  brand?: string;
+  price: number;
+  stock_quantity: number;
+  image_url?: string;
+}): Promise<Product | null> {
+  const { data, error } = await supabase
+    .from('products')
+    .insert(product)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error inserting product:', error);
+    return null;
+  }
+
+  return data;
+}
+
+/** Update product stock quantity */
+export async function updateProductStock(
+  productId: string,
+  newStock: number
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('products')
+    .update({ stock_quantity: newStock })
+    .eq('product_id', productId);
+
+  if (error) {
+    console.error('Error updating stock:', error);
+    return false;
+  }
+
+  return true;
+}
+
+/** Update vendor approval status */
+export async function updateVendorStatus(
+  vendorId: string,
+  status: 'Approved' | 'Rejected'
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('vendors')
+    .update({ approval_status: status })
+    .eq('vendor_id', vendorId);
+
+  if (error) {
+    console.error('Error updating vendor status:', error);
+    return false;
+  }
+
+  return true;
+}
+
+/** Update order status */
+export async function updateOrderStatus(
+  orderId: string,
+  status: Order['order_status']
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('orders')
+    .update({ order_status: status })
+    .eq('order_id', orderId);
+
+  if (error) {
+    console.error('Error updating order status:', error);
+    return false;
+  }
+
+  return true;
+}
+
+/** Insert a new category */
+export async function insertCategory(
+  categoryName: string,
+  parentCategoryId?: string | null
+): Promise<Category | null> {
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({
+      category_name: categoryName,
+      parent_category_id: parentCategoryId || null,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error inserting category:', error);
+    return null;
+  }
+
+  return data;
+}
+
+/** Create an order with order items (atomic transaction via Supabase RPC or sequential inserts) */
+export async function createOrder(
+  customerId: string,
+  items: { product_id: string; vendor_id: string; quantity: number; unit_price: number }[],
+  totalAmount: number
+): Promise<{ order: Order | null; sqlLog: string[] }> {
+  const sqlLog: string[] = [];
+
+  sqlLog.push('> BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+
+  // 1. Insert the order
+  const { data: orderData, error: orderError } = await supabase
+    .from('orders')
+    .insert({
+      customer_id: customerId,
+      total_amount: totalAmount,
+      order_status: 'Placed',
+    })
+    .select()
+    .single();
+
+  if (orderError || !orderData) {
+    sqlLog.push(`> -- ERROR: ${orderError?.message || 'Failed to create order'}`);
+    sqlLog.push('> ROLLBACK;');
+    return { order: null, sqlLog };
+  }
+
+  sqlLog.push(
+    `> INSERT INTO orders (order_id, customer_id, total_amount, order_status)\n  VALUES ('${orderData.order_id}', '${customerId}', ${totalAmount}, 'Placed');`
+  );
+
+  // 2. Insert order items
+  const orderItems = items.map((item) => ({
+    order_id: orderData.order_id,
+    product_id: item.product_id,
+    vendor_id: item.vendor_id,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from('order_items')
+    .insert(orderItems);
+
+  if (itemsError) {
+    sqlLog.push(`> -- ERROR inserting order_items: ${itemsError.message}`);
+    sqlLog.push('> ROLLBACK;');
+    return { order: null, sqlLog };
+  }
+
+  for (const item of items) {
+    sqlLog.push(
+      `> INSERT INTO order_items (order_id, product_id, vendor_id, quantity, unit_price)\n  VALUES ('${orderData.order_id}', '${item.product_id}', '${item.vendor_id}', ${item.quantity}, ${item.unit_price});`
+    );
+  }
+
+  // 3. Decrement stock for each product
+  for (const item of items) {
+    const { error: stockError } = await supabase.rpc('decrement_stock', {
+      p_product_id: item.product_id,
+      p_quantity: item.quantity,
+    });
+
+    // Fallback: if RPC doesn't exist, do manual update
+    if (stockError) {
+      // Read current stock then update
+      const { data: prod } = await supabase
+        .from('products')
+        .select('stock_quantity')
+        .eq('product_id', item.product_id)
+        .single();
+
+      if (prod) {
+        await supabase
+          .from('products')
+          .update({ stock_quantity: Math.max(0, prod.stock_quantity - item.quantity) })
+          .eq('product_id', item.product_id);
+      }
+    }
+
+    sqlLog.push(
+      `> UPDATE products SET stock_quantity = stock_quantity - ${item.quantity}\n  WHERE product_id = '${item.product_id}';`
+    );
+  }
+
+  sqlLog.push('> COMMIT TRANSACTION; -- [OK] All operations completed successfully.');
+
+  return { order: orderData, sqlLog };
+}

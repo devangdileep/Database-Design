@@ -1,34 +1,73 @@
 'use client';
 
-import React, { useState } from 'react';
-import { DollarSign, Package, Tag, AlertTriangle, Plus, PenSquare, CheckCircle2 } from 'lucide-react';
-import { Product, Vendor, Order, INITIAL_PRODUCTS, INITIAL_ORDERS, formatRupees } from '@/lib/supabase';
+import React, { useState, useEffect } from 'react';
+import { Package, Tag, AlertTriangle, Plus, PenSquare, CheckCircle2, Loader2 } from 'lucide-react';
+import {
+  Product,
+  Order,
+  formatRupees,
+  fetchProducts,
+  fetchOrders,
+  updateProductStock,
+  updateOrderStatus,
+} from '@/lib/supabase';
 
 interface VendorDashboardProps {
   onAddProductClick: () => void;
 }
 
 export const VendorDashboard: React.FC<VendorDashboardProps> = ({ onAddProductClick }) => {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newStockVal, setNewStockVal] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const totalRev = orders.reduce((sum, o) => sum + o.amount, 0);
-  const lowStockCount = products.filter((p) => p.stock <= 4).length;
+  const loadDashboardData = async () => {
+    setIsLoading(true);
+    const [prods, ords] = await Promise.all([fetchProducts(), fetchOrders()]);
+    setProducts(prods);
+    setOrders(ords);
+    setIsLoading(false);
+  };
 
-  const handleUpdateStock = (productId: string) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, stock: newStockVal } : p))
-    );
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const totalRev = orders.reduce((sum, o) => sum + Number(o.total_amount), 0);
+  const lowStockCount = products.filter((p) => p.stock_quantity <= 4).length;
+
+  const handleUpdateStock = async (productId: string) => {
+    setIsUpdating(true);
+    const success = await updateProductStock(productId, newStockVal);
+    if (success) {
+      setProducts((prev) =>
+        prev.map((p) => (p.product_id === productId ? { ...p, stock_quantity: newStockVal } : p))
+      );
+    }
     setEditingId(null);
+    setIsUpdating(false);
   };
 
-  const handleStatusChange = (orderId: string, status: any) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status } : o))
-    );
+  const handleStatusChange = async (orderId: string, status: Order['order_status']) => {
+    const success = await updateOrderStatus(orderId, status);
+    if (success) {
+      setOrders((prev) =>
+        prev.map((o) => (o.order_id === orderId ? { ...o, order_status: status } : o))
+      );
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+        <span className="ml-3 text-slate-400 text-sm">Loading vendor dashboard from database...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -40,7 +79,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({ onAddProductCl
             <Package className="w-5 h-5 text-blue-400" /> Vendor Inventory & Sales Dashboard
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Manage inventory levels, trigger low-stock alerts, and fulfill multi-vendor orders.
+            Manage inventory levels, trigger low-stock alerts, and fulfill multi-vendor orders from Supabase RDBMS.
           </p>
         </div>
         <button
@@ -104,6 +143,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({ onAddProductCl
             <thead className="bg-[#070d1a] text-slate-400 font-semibold uppercase border-b border-white/5">
               <tr>
                 <th className="p-3">Product Name</th>
+                <th className="p-3">Vendor</th>
                 <th className="p-3">Category</th>
                 <th className="p-3">Price</th>
                 <th className="p-3">Current Stock</th>
@@ -112,59 +152,71 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({ onAddProductCl
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {products.map((p) => {
-                const isLow = p.stock <= 4;
-                return (
-                  <tr key={p.id} className="hover:bg-white/5 transition-colors">
-                    <td className="p-3 font-semibold text-slate-100">{p.title}</td>
-                    <td className="p-3"><span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">{p.category}</span></td>
-                    <td className="p-3 font-bold">{formatRupees(p.price)}</td>
-                    <td className="p-3 font-extrabold text-slate-100">
-                      {editingId === p.id ? (
-                        <input
-                          type="number"
-                          value={newStockVal}
-                          onChange={(e) => setNewStockVal(parseInt(e.target.value) || 0)}
-                          className="w-16 bg-slate-900 border border-blue-500 rounded px-1 py-0.5 text-white"
-                        />
-                      ) : (
-                        p.stock
-                      )}
-                    </td>
-                    <td className="p-3">
-                      {isLow ? (
-                        <span className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30 text-[10px] font-bold animate-pulse">
-                          <AlertTriangle className="w-3 h-3" /> LOW STOCK ALERT
+              {products.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-4 text-center text-slate-500">No products found in database</td>
+                </tr>
+              ) : (
+                products.map((p) => {
+                  const isLow = p.stock_quantity <= 4;
+                  return (
+                    <tr key={p.product_id} className="hover:bg-white/5 transition-colors">
+                      <td className="p-3 font-semibold text-slate-100">{p.product_name}</td>
+                      <td className="p-3 text-slate-400">{p.vendor_name || 'N/A'}</td>
+                      <td className="p-3">
+                        <span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">
+                          {p.category_name || 'Uncategorized'}
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 text-[10px] font-bold">
-                          <CheckCircle2 className="w-3 h-3" /> Optimal
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3">
-                      {editingId === p.id ? (
-                        <button
-                          onClick={() => handleUpdateStock(p.id)}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded text-[11px] font-semibold"
-                        >
-                          Save
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setEditingId(p.id);
-                            setNewStockVal(p.stock);
-                          }}
-                          className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1 border border-white/10"
-                        >
-                          <PenSquare className="w-3 h-3" /> Edit
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td className="p-3 font-bold">{formatRupees(p.price)}</td>
+                      <td className="p-3 font-extrabold text-slate-100">
+                        {editingId === p.product_id ? (
+                          <input
+                            type="number"
+                            value={newStockVal}
+                            onChange={(e) => setNewStockVal(parseInt(e.target.value) || 0)}
+                            className="w-16 bg-slate-900 border border-blue-500 rounded px-1 py-0.5 text-white"
+                          />
+                        ) : (
+                          p.stock_quantity
+                        )}
+                      </td>
+                      <td className="p-3">
+                        {isLow ? (
+                          <span className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30 text-[10px] font-bold animate-pulse">
+                            <AlertTriangle className="w-3 h-3" /> LOW STOCK ALERT
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 text-[10px] font-bold">
+                            <CheckCircle2 className="w-3 h-3" /> Optimal
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3">
+                        {editingId === p.product_id ? (
+                          <button
+                            onClick={() => handleUpdateStock(p.product_id)}
+                            disabled={isUpdating}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded text-[11px] font-semibold"
+                          >
+                            Save
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setEditingId(p.product_id);
+                              setNewStockVal(p.stock_quantity);
+                            }}
+                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1 border border-white/10"
+                          >
+                            <PenSquare className="w-3 h-3" /> Edit
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -181,30 +233,45 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({ onAddProductCl
               <tr>
                 <th className="p-3">Order ID</th>
                 <th className="p-3">Customer</th>
+                <th className="p-3">Date</th>
                 <th className="p-3">Amount</th>
                 <th className="p-3">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {orders.map((o) => (
-                <tr key={o.id} className="hover:bg-white/5 transition-colors">
-                  <td className="p-3 font-mono font-bold text-blue-400">{o.id}</td>
-                  <td className="p-3 font-semibold text-slate-100">{o.customerName}</td>
-                  <td className="p-3 font-bold">{formatRupees(o.amount)}</td>
-                  <td className="p-3">
-                    <select
-                      value={o.status}
-                      onChange={(e) => handleStatusChange(o.id, e.target.value)}
-                      className="bg-slate-900 border border-white/10 rounded px-2 py-1 text-xs text-slate-200 font-semibold cursor-pointer"
-                    >
-                      <option value="Placed">Placed</option>
-                      <option value="Packed">Packed</option>
-                      <option value="Shipped">Shipped</option>
-                      <option value="Delivered">Delivered</option>
-                    </select>
-                  </td>
+              {orders.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-4 text-center text-slate-500">No orders found in database</td>
                 </tr>
-              ))}
+              ) : (
+                orders.map((o) => (
+                  <tr key={o.order_id} className="hover:bg-white/5 transition-colors">
+                    <td className="p-3 font-mono font-bold text-blue-400 text-[11px]">
+                      {o.order_id.slice(0, 8)}...
+                    </td>
+                    <td className="p-3 font-semibold text-slate-100">
+                      {o.customer_first_name} {o.customer_last_name}
+                    </td>
+                    <td className="p-3 text-slate-400 text-[11px]">
+                      {new Date(o.order_date).toLocaleDateString()}
+                    </td>
+                    <td className="p-3 font-bold">{formatRupees(o.total_amount)}</td>
+                    <td className="p-3">
+                      <select
+                        value={o.order_status}
+                        onChange={(e) => handleStatusChange(o.order_id, e.target.value as Order['order_status'])}
+                        className="bg-slate-900 border border-white/10 rounded px-2 py-1 text-xs text-slate-200 font-semibold cursor-pointer"
+                      >
+                        <option value="Placed">Placed</option>
+                        <option value="Packed">Packed</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
