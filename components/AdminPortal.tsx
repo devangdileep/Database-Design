@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, FolderTree, Terminal, Plus, Check, X, Loader2 } from 'lucide-react';
+import { ShieldCheck, FolderTree, Terminal, Plus, Check, X, Loader2, RefreshCw, Zap } from 'lucide-react';
 import {
   Vendor,
   Category,
@@ -9,6 +9,7 @@ import {
   fetchCategories,
   updateVendorStatus,
   insertCategory,
+  invalidateLocalCache,
 } from '@/lib/supabase';
 
 export const AdminPortal: React.FC = () => {
@@ -16,7 +17,9 @@ export const AdminPortal: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [logs, setLogs] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [dbLatency, setDbLatency] = useState<number | null>(null);
+  const [isCacheHit, setIsCacheHit] = useState(false);
 
   // New category inline input state
   const [newCatName, setNewCatName] = useState('');
@@ -24,24 +27,40 @@ export const AdminPortal: React.FC = () => {
   const [showAddCat, setShowAddCat] = useState(false);
   const [isAddingCat, setIsAddingCat] = useState(false);
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = async (forceRefresh = false) => {
+    if (forceRefresh) {
+      setIsRefreshing(true);
+      invalidateLocalCache('vendors');
+      invalidateLocalCache('categories');
+    } else {
+      setIsLoading(true);
+    }
+
     const start = performance.now();
-    const [vends, cats] = await Promise.all([fetchVendors(), fetchCategories()]);
+    const [vends, cats] = await Promise.all([
+      fetchVendors(forceRefresh),
+      fetchCategories(forceRefresh),
+    ]);
     const duration = Math.round(performance.now() - start);
     setDbLatency(duration);
+
+    const hit = !forceRefresh && duration < 30;
+    setIsCacheHit(hit);
 
     setVendors(vends);
     setCategories(cats);
     setIsLoading(false);
+    setIsRefreshing(false);
+
+    const sourceTag = hit ? '[LOCAL CACHE]' : '[SUPABASE NETWORK]';
     setLogs((prev) => [
-      `[${new Date().toLocaleTimeString()}] [QUERY] Loaded ${vends.length} vendors and ${cats.length} categories (${duration}ms).`,
+      `[${new Date().toLocaleTimeString()}] ${sourceTag} Loaded ${vends.length} vendors and ${cats.length} categories in ${duration}ms.`,
       ...prev,
     ]);
   };
 
   useEffect(() => {
-    loadData();
+    loadData(false);
   }, []);
 
   const handleVendorStatus = async (vendorId: string, status: 'Approved' | 'Rejected') => {
@@ -80,7 +99,7 @@ export const AdminPortal: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-24">
         <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-        <span className="ml-3 text-slate-400 text-sm">Loading admin portal from database...</span>
+        <span className="ml-3 text-slate-400 text-sm">Loading admin portal...</span>
       </div>
     );
   }
@@ -95,12 +114,42 @@ export const AdminPortal: React.FC = () => {
             <ShieldCheck className="w-5 h-5 text-purple-400" /> Platform Admin Management Portal
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Oversee vendor store approvals, category taxonomy, and real-time database transactions.
+            Oversee vendor store approvals, category taxonomy, and real-time database transactions with local caching.
           </p>
         </div>
-        <div className="bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-          DB Query Latency: {dbLatency !== null ? `${dbLatency}ms` : 'Connecting...'} | Active Connections: 1
+
+        {/* Latency & Cache Status Indicators */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div
+            className={`border text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-2 transition-all ${
+              isCacheHit
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'
+            }`}
+          >
+            {isCacheHit ? (
+              <Zap className="w-3.5 h-3.5 text-emerald-400 fill-current" />
+            ) : (
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            )}
+            <span>
+              {isCacheHit ? `Local Cache: ${dbLatency}ms` : `DB Latency: ${dbLatency ?? 0}ms`}
+            </span>
+            <span className="text-slate-500 text-[10px]">|</span>
+            <span className="text-[11px] text-slate-300">
+              {isCacheHit ? 'Instant ⚡' : 'Network 🌐'}
+            </span>
+          </div>
+
+          <button
+            onClick={() => loadData(true)}
+            disabled={isRefreshing}
+            className="bg-slate-900 border border-white/10 hover:border-blue-500 text-slate-300 hover:text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all"
+            title="Bypass local cache and re-sync from Supabase"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-blue-400' : ''}`} />
+            <span>{isRefreshing ? 'Syncing...' : 'Sync DB'}</span>
+          </button>
         </div>
       </div>
 
@@ -262,7 +311,7 @@ export const AdminPortal: React.FC = () => {
           </div>
         </div>
 
-        {/* Database Trigger / Operation Log Box */}
+        {/* Database Transaction / Audit Log Box */}
         <div className="glass-card p-4 space-y-3 border border-white/10">
           <div className="flex items-center justify-between border-b border-white/10 pb-2">
             <h3 className="font-heading font-bold text-sm text-slate-200 flex items-center gap-2">

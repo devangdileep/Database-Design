@@ -99,12 +99,105 @@ export const formatRupees = (amount: number): string => {
 };
 
 // ---------------------------------------------------------------------------
-// Data Fetching Functions
+// High-Performance Local Caching Layer (Memory + Persistent LocalStorage)
+// ---------------------------------------------------------------------------
+interface CacheItem<T> {
+  data: T;
+  timestamp: number;
+}
+
+const MEMORY_CACHE = new Map<string, CacheItem<any>>();
+export const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
+
+/** Get cached data from memory or localStorage */
+export function getLocalCache<T>(key: string, maxAgeMs = DEFAULT_CACHE_TTL_MS): T | null {
+  const now = Date.now();
+  // 1. In-memory lookup (0ms)
+  const mem = MEMORY_CACHE.get(key);
+  if (mem && now - mem.timestamp < maxAgeMs) {
+    return mem.data as T;
+  }
+
+  // 2. Persistent browser storage lookup (<2ms)
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(`shopsphere_cache_${key}`);
+      if (raw) {
+        const parsed: CacheItem<T> = JSON.parse(raw);
+        if (now - parsed.timestamp < maxAgeMs) {
+          MEMORY_CACHE.set(key, parsed); // Re-warm memory cache
+          return parsed.data;
+        }
+      }
+    } catch {
+      // LocalStorage access fallback
+    }
+  }
+
+  return null;
+}
+
+/** Store data into memory and localStorage */
+export function setLocalCache<T>(key: string, data: T): void {
+  const entry: CacheItem<T> = { data, timestamp: Date.now() };
+  MEMORY_CACHE.set(key, entry);
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(`shopsphere_cache_${key}`, JSON.stringify(entry));
+    } catch {
+      // LocalStorage quota fallback
+    }
+  }
+}
+
+/** Invalidate specific key or entire cache */
+export function invalidateLocalCache(key?: string): void {
+  if (key) {
+    MEMORY_CACHE.delete(key);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(`shopsphere_cache_${key}`);
+      } catch {}
+    }
+  } else {
+    MEMORY_CACHE.clear();
+    if (typeof window !== 'undefined') {
+      try {
+        const keys = Object.keys(localStorage).filter((k) =>
+          k.startsWith('shopsphere_cache_')
+        );
+        keys.forEach((k) => localStorage.removeItem(k));
+      } catch {}
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Data Fetching Functions with Smart Local Caching
 // ---------------------------------------------------------------------------
 
-/** Fetch all products with joined vendor_name and category_name */
-export async function fetchProducts(categoryName?: string): Promise<Product[]> {
-  let query = supabase
+/** Fetch all products with local caching and joined vendor/category names */
+export async function fetchProducts(
+  categoryName?: string,
+  forceRefresh = false
+): Promise<Product[]> {
+  const cacheKey = 'products';
+
+  // 1. Check local cache first unless forceRefresh is requested
+  if (!forceRefresh) {
+    const cached = getLocalCache<Product[]>(cacheKey);
+    if (cached) {
+      if (categoryName && categoryName !== 'ALL') {
+        return cached.filter(
+          (p) => p.category_name?.toLowerCase() === categoryName.toLowerCase()
+        );
+      }
+      return cached;
+    }
+  }
+
+  // 2. Fetch from Supabase RDBMS
+  const { data, error } = await supabase
     .from('products')
     .select(`
       *,
@@ -113,14 +206,15 @@ export async function fetchProducts(categoryName?: string): Promise<Product[]> {
     `)
     .order('created_at', { ascending: false });
 
-  const { data, error } = await query;
-
   if (error) {
     console.error('Error fetching products:', error);
+    // If network fails, attempt to return stale cache if available
+    const stale = getLocalCache<Product[]>(cacheKey, Infinity);
+    if (stale) return stale;
     return [];
   }
 
-  // Flatten joined data
+  // 3. Transform and cache
   const products: Product[] = (data || []).map((row: any) => ({
     product_id: row.product_id,
     vendor_id: row.vendor_id,
@@ -136,7 +230,8 @@ export async function fetchProducts(categoryName?: string): Promise<Product[]> {
     category_name: row.categories?.category_name || 'Uncategorized',
   }));
 
-  // Client-side category filter if specified
+  setLocalCache(cacheKey, products);
+
   if (categoryName && categoryName !== 'ALL') {
     return products.filter(
       (p) => p.category_name?.toLowerCase() === categoryName.toLowerCase()
@@ -146,8 +241,15 @@ export async function fetchProducts(categoryName?: string): Promise<Product[]> {
   return products;
 }
 
-/** Fetch all categories */
-export async function fetchCategories(): Promise<Category[]> {
+/** Fetch all categories with local caching */
+export async function fetchCategories(forceRefresh = false): Promise<Category[]> {
+  const cacheKey = 'categories';
+
+  if (!forceRefresh) {
+    const cached = getLocalCache<Category[]>(cacheKey);
+    if (cached) return cached;
+  }
+
   const { data, error } = await supabase
     .from('categories')
     .select('*')
@@ -155,14 +257,25 @@ export async function fetchCategories(): Promise<Category[]> {
 
   if (error) {
     console.error('Error fetching categories:', error);
+    const stale = getLocalCache<Category[]>(cacheKey, Infinity);
+    if (stale) return stale;
     return [];
   }
 
-  return data || [];
+  const categories = data || [];
+  setLocalCache(cacheKey, categories);
+  return categories;
 }
 
-/** Fetch all vendors */
-export async function fetchVendors(): Promise<Vendor[]> {
+/** Fetch all vendors with local caching */
+export async function fetchVendors(forceRefresh = false): Promise<Vendor[]> {
+  const cacheKey = 'vendors';
+
+  if (!forceRefresh) {
+    const cached = getLocalCache<Vendor[]>(cacheKey);
+    if (cached) return cached;
+  }
+
   const { data, error } = await supabase
     .from('vendors')
     .select('*')
@@ -170,17 +283,29 @@ export async function fetchVendors(): Promise<Vendor[]> {
 
   if (error) {
     console.error('Error fetching vendors:', error);
+    const stale = getLocalCache<Vendor[]>(cacheKey, Infinity);
+    if (stale) return stale;
     return [];
   }
 
-  return (data || []).map((row: any) => ({
+  const vendors: Vendor[] = (data || []).map((row: any) => ({
     ...row,
     approval_status: row.approval_status as Vendor['approval_status'],
   }));
+
+  setLocalCache(cacheKey, vendors);
+  return vendors;
 }
 
-/** Fetch all orders with joined customer names */
-export async function fetchOrders(): Promise<Order[]> {
+/** Fetch all orders with local caching */
+export async function fetchOrders(forceRefresh = false): Promise<Order[]> {
+  const cacheKey = 'orders';
+
+  if (!forceRefresh) {
+    const cached = getLocalCache<Order[]>(cacheKey);
+    if (cached) return cached;
+  }
+
   const { data, error } = await supabase
     .from('orders')
     .select(`
@@ -191,10 +316,12 @@ export async function fetchOrders(): Promise<Order[]> {
 
   if (error) {
     console.error('Error fetching orders:', error);
+    const stale = getLocalCache<Order[]>(cacheKey, Infinity);
+    if (stale) return stale;
     return [];
   }
 
-  return (data || []).map((row: any) => ({
+  const orders: Order[] = (data || []).map((row: any) => ({
     order_id: row.order_id,
     customer_id: row.customer_id,
     order_date: row.order_date,
@@ -203,10 +330,20 @@ export async function fetchOrders(): Promise<Order[]> {
     customer_first_name: row.customers?.first_name || '',
     customer_last_name: row.customers?.last_name || '',
   }));
+
+  setLocalCache(cacheKey, orders);
+  return orders;
 }
 
-/** Fetch the first customer (for simulated login) */
-export async function fetchCurrentCustomer(): Promise<Customer | null> {
+/** Fetch the first customer (with local caching) */
+export async function fetchCurrentCustomer(forceRefresh = false): Promise<Customer | null> {
+  const cacheKey = 'current_customer';
+
+  if (!forceRefresh) {
+    const cached = getLocalCache<Customer>(cacheKey);
+    if (cached) return cached;
+  }
+
   const { data, error } = await supabase
     .from('customers')
     .select('*')
@@ -218,14 +355,17 @@ export async function fetchCurrentCustomer(): Promise<Customer | null> {
     return null;
   }
 
+  if (data) {
+    setLocalCache(cacheKey, data);
+  }
   return data;
 }
 
 // ---------------------------------------------------------------------------
-// Data Mutation Functions
+// Data Mutation Functions (With Optimistic Cache Invalidation)
 // ---------------------------------------------------------------------------
 
-/** Insert a new product */
+/** Insert a new product and update local cache */
 export async function insertProduct(product: {
   vendor_id: string;
   category_id: string | null;
@@ -239,7 +379,11 @@ export async function insertProduct(product: {
   const { data, error } = await supabase
     .from('products')
     .insert(product)
-    .select()
+    .select(`
+      *,
+      vendors ( vendor_name ),
+      categories ( category_name )
+    `)
     .single();
 
   if (error) {
@@ -247,14 +391,39 @@ export async function insertProduct(product: {
     return null;
   }
 
+  // Update local cache optimistically
+  const cached = getLocalCache<Product[]>('products');
+  if (cached && data) {
+    const newProduct: Product = {
+      ...data,
+      price: Number(data.price),
+      vendor_name: data.vendors?.vendor_name || 'Vendor',
+      category_name: data.categories?.category_name || 'Category',
+    };
+    setLocalCache('products', [newProduct, ...cached]);
+  } else {
+    invalidateLocalCache('products');
+  }
+
   return data;
 }
 
-/** Update product stock quantity */
+/** Update product stock quantity and update local cache */
 export async function updateProductStock(
   productId: string,
   newStock: number
 ): Promise<boolean> {
+  // Optimistic local cache update for instant UI responsiveness
+  const cached = getLocalCache<Product[]>('products');
+  if (cached) {
+    setLocalCache(
+      'products',
+      cached.map((p) =>
+        p.product_id === productId ? { ...p, stock_quantity: newStock } : p
+      )
+    );
+  }
+
   const { error } = await supabase
     .from('products')
     .update({ stock_quantity: newStock })
@@ -262,17 +431,29 @@ export async function updateProductStock(
 
   if (error) {
     console.error('Error updating stock:', error);
+    invalidateLocalCache('products');
     return false;
   }
 
   return true;
 }
 
-/** Update vendor approval status */
+/** Update vendor approval status and update local cache */
 export async function updateVendorStatus(
   vendorId: string,
   status: 'Approved' | 'Rejected'
 ): Promise<boolean> {
+  // Optimistic local cache update
+  const cached = getLocalCache<Vendor[]>('vendors');
+  if (cached) {
+    setLocalCache(
+      'vendors',
+      cached.map((v) =>
+        v.vendor_id === vendorId ? { ...v, approval_status: status } : v
+      )
+    );
+  }
+
   const { error } = await supabase
     .from('vendors')
     .update({ approval_status: status })
@@ -280,17 +461,26 @@ export async function updateVendorStatus(
 
   if (error) {
     console.error('Error updating vendor status:', error);
+    invalidateLocalCache('vendors');
     return false;
   }
 
   return true;
 }
 
-/** Update order status */
+/** Update order status and update local cache */
 export async function updateOrderStatus(
   orderId: string,
   status: Order['order_status']
 ): Promise<boolean> {
+  const cached = getLocalCache<Order[]>('orders');
+  if (cached) {
+    setLocalCache(
+      'orders',
+      cached.map((o) => (o.order_id === orderId ? { ...o, order_status: status } : o))
+    );
+  }
+
   const { error } = await supabase
     .from('orders')
     .update({ order_status: status })
@@ -298,13 +488,14 @@ export async function updateOrderStatus(
 
   if (error) {
     console.error('Error updating order status:', error);
+    invalidateLocalCache('orders');
     return false;
   }
 
   return true;
 }
 
-/** Insert a new category */
+/** Insert a new category and update local cache */
 export async function insertCategory(
   categoryName: string,
   parentCategoryId?: string | null
@@ -323,10 +514,18 @@ export async function insertCategory(
     return null;
   }
 
+  // Update local cache
+  const cached = getLocalCache<Category[]>('categories');
+  if (cached && data) {
+    setLocalCache('categories', [...cached, data]);
+  } else {
+    invalidateLocalCache('categories');
+  }
+
   return data;
 }
 
-/** Create an order with order items (atomic transaction via Supabase RPC or sequential inserts) */
+/** Create an order with order items and update local cache */
 export async function createOrder(
   customerId: string,
   items: { product_id: string; vendor_id: string; quantity: number; unit_price: number }[],
@@ -389,9 +588,7 @@ export async function createOrder(
       p_quantity: item.quantity,
     });
 
-    // Fallback: if RPC doesn't exist, do manual update
     if (stockError) {
-      // Read current stock then update
       const { data: prod } = await supabase
         .from('products')
         .select('stock_quantity')
@@ -412,6 +609,22 @@ export async function createOrder(
   }
 
   sqlLog.push('> COMMIT TRANSACTION; -- [OK] All operations completed successfully.');
+
+  // Update local cache optimistically
+  invalidateLocalCache('orders');
+  const cachedProds = getLocalCache<Product[]>('products');
+  if (cachedProds) {
+    const qtyMap = new Map(items.map((i) => [i.product_id, i.quantity]));
+    setLocalCache(
+      'products',
+      cachedProds.map((p) => {
+        const bought = qtyMap.get(p.product_id);
+        return bought
+          ? { ...p, stock_quantity: Math.max(0, p.stock_quantity - bought) }
+          : p;
+      })
+    );
+  }
 
   return { order: orderData, sqlLog };
 }
