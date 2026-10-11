@@ -221,8 +221,8 @@ export const AdminPortal: React.FC = () => {
           <h3 className="font-heading font-bold text-sm text-slate-200">Vendor Store Approval Workflow</h3>
           <span className="text-xs text-slate-400">{vendors.length} Total Registered Vendors</span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
+        <div className="overflow-x-auto touch-pan-x">
+          <table className="w-full min-w-[560px] text-left text-xs text-slate-300">
             <thead className="bg-[#070d1a] text-slate-400 font-semibold uppercase border-b border-white/5">
               <tr>
                 <th className="p-3">Vendor Name</th>

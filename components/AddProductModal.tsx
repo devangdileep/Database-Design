@@ -76,7 +76,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     });
     setIsSubmitting(false);
 
-    // Reset form
     setProductName('');
     setBrand('');
     setDescription('');
@@ -87,20 +86,24 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
-      <div className="glass-card w-full max-w-lg p-6 space-y-4 border border-blue-500/40 relative max-h-[90vh] overflow-y-auto">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4">
+      <div className="glass-card w-full max-w-lg p-5 sm:p-6 space-y-4 border border-blue-500/40 relative max-h-[92vh] overflow-y-auto rounded-2xl">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg"
+        >
           <X className="w-5 h-5" />
         </button>
 
-        <h3 className="font-heading font-bold text-lg text-slate-100 flex items-center gap-2">
-          <PlusCircle className="w-5 h-5 text-blue-400" /> Add Product to Catalog
+        <h3 className="font-heading font-bold text-base sm:text-lg text-slate-100 flex items-center gap-2">
+          <PlusCircle className="w-5 h-5 text-blue-400 shrink-0" />
+          <span>Add Product to Catalog</span>
         </h3>
 
         {isLoadingMetadata ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
-            <span className="ml-2 text-xs text-slate-400">Loading categories and vendors...</span>
+            <span className="ml-2 text-xs text-slate-400">Loading catalog options...</span>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3 text-xs">
@@ -112,11 +115,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
                 placeholder="e.g. Ultra Smartwatch Series 9"
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-xs"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-400 font-semibold mb-1">Brand</label>
                 <input
@@ -124,7 +127,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   value={brand}
                   onChange={(e) => setBrand(e.target.value)}
                   placeholder="e.g. Apple, Sony, Nike"
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-xs"
                 />
               </div>
 
@@ -133,7 +136,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-xs"
                 >
                   <option value="">Select Category</option>
                   {categories.map((cat) => (
@@ -145,14 +148,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-400 font-semibold mb-1">Vendor Store *</label>
                 <select
                   required
                   value={vendorId}
                   onChange={(e) => setVendorId(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-xs"
                 >
                   <option value="">Select Vendor</option>
                   {vendors.map((v) => (
@@ -172,12 +175,12 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="e.g. 4999"
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-xs"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-400 font-semibold mb-1">Stock Quantity *</label>
                 <input
@@ -186,7 +189,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   value={stockQuantity}
                   onChange={(e) => setStockQuantity(e.target.value)}
                   placeholder="e.g. 25"
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-xs"
                 />
               </div>
 
@@ -197,7 +200,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-xs"
                 />
               </div>
             </div>
@@ -208,8 +211,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 rows={2}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Product specifications, features, details..."
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 resize-none"
+                placeholder="Specifications, features, details..."
+                className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 resize-none text-xs"
               />
             </div>
 
@@ -217,14 +220,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl font-semibold"
+                className="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl font-semibold text-xs"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="gradient-btn px-5 py-2 rounded-xl font-semibold shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                className="gradient-btn px-5 py-2 rounded-xl font-semibold shadow-lg shadow-blue-500/20 flex items-center gap-2 text-xs"
               >
                 {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Create Product

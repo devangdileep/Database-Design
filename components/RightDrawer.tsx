@@ -31,7 +31,7 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({ products, onSelectProd
 
       {/* Slide-out Drawer Panel */}
       {isOpen && (
-        <div className="w-72 bg-[#090e1a]/95 backdrop-blur-2xl border border-white/10 rounded-l-2xl p-4 shadow-2xl space-y-3 max-h-[80vh] overflow-y-auto">
+        <div className="w-[85vw] max-w-xs sm:w-72 bg-[#090e1a]/95 backdrop-blur-2xl border border-white/10 rounded-l-2xl p-4 shadow-2xl space-y-3 max-h-[80vh] overflow-y-auto">
           <div className="flex items-center justify-between border-b border-white/10 pb-2">
             <h3 className="font-heading font-bold text-sm text-slate-100 flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-purple-400" /> Recommended

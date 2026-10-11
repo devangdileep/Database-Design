@@ -159,7 +159,7 @@ export default function Home() {
         />
 
         {/* Content Body */}
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto pb-24">
+        <main className="flex-1 p-3.5 sm:p-6 md:p-8 max-w-7xl w-full mx-auto pb-24 md:pb-12">
           
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
@@ -169,7 +169,7 @@ export default function Home() {
           ) : (
             <>
               {currentTab === 'storefront' && (
-                <div className="space-y-6">
+                <div className="space-y-5 sm:space-y-6">
                   
                   {/* Category Pills Bar */}
                   <CategoryPills
@@ -180,14 +180,14 @@ export default function Home() {
 
                   {/* Section Header */}
                   <div className="flex items-center justify-between">
-                    <h2 className="font-heading font-extrabold text-2xl text-slate-100 tracking-tight">
+                    <h2 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-100 tracking-tight">
                       Top Deals & Comparison
                     </h2>
-                    <div className="flex items-center gap-2">
-                      <button className="w-8 h-8 rounded-full bg-[#0e1628] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <button className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#0e1628] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
                         <ChevronLeft className="w-4 h-4" />
                       </button>
-                      <button className="w-8 h-8 rounded-full bg-[#0e1628] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                      <button className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#0e1628] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
                         <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -200,7 +200,7 @@ export default function Home() {
                       <p className="text-xs">Try a different category or search term.</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-5">
                       {filteredProducts.map((product) => (
                         <ProductCard
                           key={product.product_id}
@@ -260,7 +260,7 @@ export default function Home() {
       <RightDrawer products={products} onSelectProduct={handleAddToCart} />
 
       {/* Bottom Floating Dock */}
-      <BottomDock activeTab={currentTab} onTabChange={setCurrentTab} />
+      <BottomDock activeTab={currentTab} onTabChange={setCurrentTab} cartCount={cartCount} />
 
       {/* Add Product Modal */}
       <AddProductModal
@@ -271,8 +271,8 @@ export default function Home() {
 
       {/* Vendor Comparison Modal */}
       {comparingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="glass-card w-full max-w-md p-6 space-y-4 border border-blue-500/40 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4">
+          <div className="glass-card w-[94%] sm:w-full max-w-md p-5 sm:p-6 space-y-4 border border-blue-500/40 relative rounded-2xl">
             <button
               onClick={() => setComparingProduct(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white"

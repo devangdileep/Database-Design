@@ -138,8 +138,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({ onAddProductCl
         <div className="p-4 border-b border-white/10">
           <h3 className="font-heading font-bold text-sm text-slate-200">Real-Time Inventory Table</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
+        <div className="overflow-x-auto touch-pan-x">
+          <table className="w-full min-w-[620px] text-left text-xs text-slate-300">
             <thead className="bg-[#070d1a] text-slate-400 font-semibold uppercase border-b border-white/5">
               <tr>
                 <th className="p-3">Product Name</th>
@@ -227,8 +227,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({ onAddProductCl
         <div className="p-4 border-b border-white/10">
           <h3 className="font-heading font-bold text-sm text-slate-200">Order Fulfillment Queue</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
+        <div className="overflow-x-auto touch-pan-x">
+          <table className="w-full min-w-[540px] text-left text-xs text-slate-300">
             <thead className="bg-[#070d1a] text-slate-400 font-semibold uppercase border-b border-white/5">
               <tr>
                 <th className="p-3">Order ID</th>

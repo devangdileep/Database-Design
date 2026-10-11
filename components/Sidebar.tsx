@@ -18,18 +18,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navItems = [
     { id: 'storefront', label: 'Storefront', icon: Home },
+    { id: 'orders', label: 'Orders & Tracking', icon: FolderOpen },
     { id: 'vendor', label: 'Vendor Dashboard', icon: LayoutGrid },
     { id: 'checkout', label: 'Cart & Checkout', icon: ShoppingCart, badge: cartCount },
-    { id: 'orders', label: 'Orders & Fulfillment', icon: FolderOpen },
     { id: 'admin', label: 'Admin Portal', icon: User },
     { id: 'settings', label: 'System Settings', icon: Settings },
   ];
 
   return (
-    <aside className="w-16 md:w-20 min-h-screen bg-[#070a12]/90 border-r border-white/10 flex flex-col items-center py-5 justify-between select-none z-30">
+    <aside className="hidden md:flex w-16 lg:w-20 min-h-screen bg-[#070a12]/90 border-r border-white/10 flex-col items-center py-5 justify-between select-none z-30 shrink-0">
       
       {/* Top Logo */}
-      <div className="flex flex-col items-center gap-2 cursor-pointer group" onClick={() => onTabChange('storefront')}>
+      <div
+        className="flex flex-col items-center gap-2 cursor-pointer group"
+        onClick={() => onTabChange('storefront')}
+        title="ShopSphere Storefront"
+      >
         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform">
           S
         </div>
@@ -53,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <Icon className="w-5 h-5" />
-              {item.badge ? (
+              {item.badge && item.badge > 0 ? (
                 <span className="absolute -top-1 -right-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-md">
                   {item.badge}
                 </span>
@@ -66,8 +70,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
-      {/* Bottom Profile / Settings Quick Action */}
-      <div className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:border-blue-500 transition-colors cursor-pointer" title="Active Role">
+      {/* Bottom Profile Quick Action */}
+      <div
+        onClick={() => onTabChange('profile')}
+        className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:border-blue-500 transition-colors cursor-pointer"
+        title="User Profile"
+      >
         <span className="text-xs font-semibold">{userInitials}</span>
       </div>
 
