@@ -38,6 +38,7 @@ All design and database architecture documents are located in the [`documents/`]
 
 - **[ER Relationship Diagram](./documents/ER_Relationship_Diagram.png)**: Visual Entity-Relationship model showing all 6 tables, keys, and cardinality.
 - **[DBMS Schema Documentation](./documents/DBMS_Schema_Documentation.md)**: In-depth technical breakdown of tables, foreign key constraints, indexes, and ACID transaction mechanics.
+- **[DB Design Document (PDF)](./documents/ShopSphere_DB_Design_Document.pdf)**: Formal Database Design Specification document.
 - **[UI Design Document (PDF)](./documents/ShopSphere_UI_Design_Document.pdf)**: Formal project specification and UI design system.
 - **[UI Design Document (HTML)](./documents/ShopSphere_UI_Design_Document.html)**: Interactive web view of the design document.
 
