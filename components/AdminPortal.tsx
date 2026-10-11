@@ -1,7 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, FolderTree, Terminal, Plus, Check, X, Loader2, RefreshCw, Zap } from 'lucide-react';
+import {
+  ShieldCheck,
+  FolderTree,
+  Terminal,
+  Plus,
+  Check,
+  X,
+  Loader2,
+  RefreshCw,
+  Zap,
+  Database,
+  KeyRound,
+  RotateCcw,
+} from 'lucide-react';
 import {
   Vendor,
   Category,
@@ -10,6 +23,10 @@ import {
   updateVendorStatus,
   insertCategory,
   invalidateLocalCache,
+  resetToSeedData,
+  isSupabaseConfigured,
+  updateSupabaseConnection,
+  getActiveSupabaseUrl,
 } from '@/lib/supabase';
 
 export const AdminPortal: React.FC = () => {
@@ -26,6 +43,17 @@ export const AdminPortal: React.FC = () => {
   const [newCatParentId, setNewCatParentId] = useState<string>('');
   const [showAddCat, setShowAddCat] = useState(false);
   const [isAddingCat, setIsAddingCat] = useState(false);
+
+  // Database Connection Modal state
+  const [showDbModal, setShowDbModal] = useState(false);
+  const [inputUrl, setInputUrl] = useState('');
+  const [inputKey, setInputKey] = useState('');
+  const [isConfigured, setIsConfigured] = useState(false);
+
+  useEffect(() => {
+    setIsConfigured(isSupabaseConfigured());
+    setInputUrl(getActiveSupabaseUrl().includes('placeholder') ? '' : getActiveSupabaseUrl());
+  }, []);
 
   const loadData = async (forceRefresh = false) => {
     if (forceRefresh) {
@@ -44,7 +72,7 @@ export const AdminPortal: React.FC = () => {
     const duration = Math.round(performance.now() - start);
     setDbLatency(duration);
 
-    const hit = !forceRefresh && duration < 30;
+    const hit = !forceRefresh && duration < 35;
     setIsCacheHit(hit);
 
     setVendors(vends);
@@ -52,7 +80,7 @@ export const AdminPortal: React.FC = () => {
     setIsLoading(false);
     setIsRefreshing(false);
 
-    const sourceTag = hit ? '[LOCAL CACHE]' : '[SUPABASE NETWORK]';
+    const sourceTag = hit ? '[LOCAL CACHE]' : '[DATABASE SYNC]';
     setLogs((prev) => [
       `[${new Date().toLocaleTimeString()}] ${sourceTag} Loaded ${vends.length} vendors and ${cats.length} categories in ${duration}ms.`,
       ...prev,
@@ -93,6 +121,20 @@ export const AdminPortal: React.FC = () => {
       setShowAddCat(false);
     }
     setIsAddingCat(false);
+  };
+
+  const handleSaveConnection = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputUrl || !inputKey) return;
+    updateSupabaseConnection(inputUrl, inputKey);
+    setIsConfigured(true);
+    setShowDbModal(false);
+    loadData(true);
+  };
+
+  const handleResetData = () => {
+    resetToSeedData();
+    loadData(false);
   };
 
   if (isLoading) {
@@ -149,6 +191,26 @@ export const AdminPortal: React.FC = () => {
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-blue-400' : ''}`} />
             <span>{isRefreshing ? 'Syncing...' : 'Sync DB'}</span>
+          </button>
+
+          <button
+            onClick={() => setShowDbModal(true)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 border transition-all ${
+              isConfigured
+                ? 'bg-blue-600/20 border-blue-500/40 text-blue-300 hover:bg-blue-600/30'
+                : 'bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30 animate-pulse'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5" />
+            <span>{isConfigured ? 'Live DB Linked' : 'Connect Supabase'}</span>
+          </button>
+
+          <button
+            onClick={handleResetData}
+            className="bg-slate-900 border border-white/10 hover:border-purple-500 text-slate-400 hover:text-slate-200 px-2.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 transition-all"
+            title="Reset to sample seed dataset"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -336,6 +398,76 @@ export const AdminPortal: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Supabase Connection Settings Modal */}
+      {showDbModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="glass-card w-full max-w-lg p-6 space-y-4 border border-blue-500/40 relative">
+            <button
+              onClick={() => setShowDbModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="font-heading font-bold text-base text-slate-100 flex items-center gap-2">
+              <Database className="w-5 h-5 text-blue-400" /> Connect Your Live Supabase Database
+            </h3>
+
+            <p className="text-xs text-slate-400">
+              Paste your Supabase credentials here to link directly to your live cloud database.
+            </p>
+
+            <form onSubmit={handleSaveConnection} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Project URL</label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://xyzcompany.supabase.co"
+                  value={inputUrl}
+                  onChange={(e) => setInputUrl(e.target.value)}
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1">
+                  <KeyRound className="w-3.5 h-3.5 text-blue-400" /> Anon Public Key
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="eyJhbGciOiJIUzI1NiIsIn..."
+                  value={inputKey}
+                  onChange={(e) => setInputKey(e.target.value)}
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 font-mono"
+                />
+              </div>
+
+              <div className="bg-blue-950/40 border border-blue-500/20 p-2.5 rounded-xl text-[11px] text-blue-300">
+                💡 Credentials are saved securely in your browser session and will query your cloud tables directly.
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDbModal(false)}
+                  className="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="gradient-btn px-5 py-2 rounded-xl font-semibold shadow-lg shadow-blue-500/20"
+                >
+                  Connect & Sync
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );
