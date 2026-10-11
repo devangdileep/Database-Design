@@ -26,11 +26,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="hidden md:flex w-16 lg:w-20 min-h-screen bg-[#070a12]/90 border-r border-white/10 flex-col items-center py-5 justify-between select-none z-30 shrink-0">
+    <aside className="hidden md:flex w-16 lg:w-20 h-screen sticky top-0 self-start bg-[#070a12]/95 backdrop-blur-xl border-r border-white/10 flex-col items-center py-5 justify-between select-none z-30 shrink-0">
       
       {/* Top Logo */}
       <div
-        className="flex flex-col items-center gap-2 cursor-pointer group"
+        className="flex flex-col items-center gap-2 cursor-pointer group shrink-0"
         onClick={() => onTabChange('storefront')}
         title="ShopSphere Storefront"
       >
@@ -40,7 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Nav Icon Rail */}
-      <nav className="flex flex-col items-center gap-4 my-auto">
+      <nav className="flex flex-col items-center gap-4 my-auto py-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.id;
@@ -73,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Bottom Profile Quick Action */}
       <div
         onClick={() => onTabChange('profile')}
-        className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:border-blue-500 transition-colors cursor-pointer"
+        className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:border-blue-500 transition-colors cursor-pointer shrink-0"
         title="User Profile"
       >
         <span className="text-xs font-semibold">{userInitials}</span>
