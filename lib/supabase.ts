@@ -99,6 +99,16 @@ export interface Order {
   total_amount: number;
   customer_first_name?: string;
   customer_last_name?: string;
+  items?: {
+    order_item_id?: string;
+    product_id: string;
+    product_name?: string;
+    vendor_id?: string;
+    vendor_name?: string;
+    quantity: number;
+    unit_price: number;
+    image_url?: string;
+  }[];
 }
 
 export interface OrderItem {
@@ -283,31 +293,87 @@ const SEED_PRODUCTS: Product[] = [
 
 const SEED_ORDERS: Order[] = [
   {
-    order_id: 'e1b2c3d4-0001-4000-8000-000000000001',
+    order_id: 'ORD-7192',
     customer_id: 'a1b2c3d4-0001-4000-8000-000000000001',
-    order_date: new Date().toISOString(),
+    order_date: new Date(Date.now() - 3600000 * 24 * 2).toISOString(),
     order_status: 'Shipped',
     total_amount: 98297.00,
     customer_first_name: 'Sravan',
     customer_last_name: 'Kumar',
+    items: [
+      {
+        order_item_id: 'oi-1',
+        product_id: 'd1b2c3d4-0001-4000-8000-000000000001',
+        product_name: 'PixelBook Pro 15',
+        vendor_id: 'c1b2c3d4-0001-4000-8000-000000000001',
+        vendor_name: 'TechHub',
+        quantity: 1,
+        unit_price: 74999.00,
+        image_url: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        order_item_id: 'oi-2',
+        product_id: 'd1b2c3d4-0001-4000-8000-000000000002',
+        product_name: 'Aura Headphones',
+        vendor_id: 'c1b2c3d4-0001-4000-8000-000000000002',
+        vendor_name: 'SoundWaves',
+        quantity: 1,
+        unit_price: 19999.00,
+        image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        order_item_id: 'oi-3',
+        product_id: 'd1b2c3d4-0001-4000-8000-000000000003',
+        product_name: 'HydroFlask 32oz',
+        vendor_id: 'c1b2c3d4-0001-4000-8000-000000000003',
+        vendor_name: 'GearOut',
+        quantity: 1,
+        unit_price: 3299.00,
+        image_url: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=600&q=80',
+      },
+    ],
   },
   {
-    order_id: 'e1b2c3d4-0001-4000-8000-000000000002',
+    order_id: 'ORD-8401',
     customer_id: 'a1b2c3d4-0001-4000-8000-000000000002',
-    order_date: new Date().toISOString(),
+    order_date: new Date(Date.now() - 3600000 * 5).toISOString(),
     order_status: 'Placed',
     total_amount: 19999.00,
     customer_first_name: 'Priya',
     customer_last_name: 'Sharma',
+    items: [
+      {
+        order_item_id: 'oi-4',
+        product_id: 'd1b2c3d4-0001-4000-8000-000000000002',
+        product_name: 'Aura Headphones',
+        vendor_id: 'c1b2c3d4-0001-4000-8000-000000000002',
+        vendor_name: 'SoundWaves',
+        quantity: 1,
+        unit_price: 19999.00,
+        image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80',
+      },
+    ],
   },
   {
-    order_id: 'e1b2c3d4-0001-4000-8000-000000000003',
+    order_id: 'ORD-9124',
     customer_id: 'a1b2c3d4-0001-4000-8000-000000000003',
-    order_date: new Date().toISOString(),
-    order_status: 'Packed',
+    order_date: new Date(Date.now() - 3600000 * 24).toISOString(),
+    order_status: 'Delivered',
     total_amount: 3299.00,
     customer_first_name: 'Arjun',
     customer_last_name: 'Reddy',
+    items: [
+      {
+        order_item_id: 'oi-5',
+        product_id: 'd1b2c3d4-0001-4000-8000-000000000003',
+        product_name: 'HydroFlask 32oz',
+        vendor_id: 'c1b2c3d4-0001-4000-8000-000000000003',
+        vendor_name: 'GearOut',
+        quantity: 1,
+        unit_price: 3299.00,
+        image_url: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=600&q=80',
+      },
+    ],
   },
 ];
 
@@ -775,18 +841,33 @@ export async function createOrder(
 
   sqlLog.push('> COMMIT TRANSACTION; -- [OK] Atomic order committed successfully.');
 
+  const cachedProds = getLocalCache<Product[]>('products') || SEED_PRODUCTS;
+  const currentCust = getLocalCache<Customer>('current_customer') || SEED_CUSTOMERS[0];
+
   const newOrder: Order = {
     order_id: newOrderId,
     customer_id: customerId,
     order_date: new Date().toISOString(),
     order_status: 'Placed',
     total_amount: totalAmount,
-    customer_first_name: 'Customer',
-    customer_last_name: '',
+    customer_first_name: currentCust?.first_name || 'Sravan',
+    customer_last_name: currentCust?.last_name || 'Kumar',
+    items: items.map((item) => {
+      const prod = cachedProds.find((p) => p.product_id === item.product_id);
+      return {
+        order_item_id: 'oi-' + Math.floor(1000 + Math.random() * 9000),
+        product_id: item.product_id,
+        product_name: prod?.product_name || 'Product',
+        vendor_id: item.vendor_id,
+        vendor_name: prod?.vendor_name || 'Vendor',
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        image_url: prod?.image_url || undefined,
+      };
+    }),
   };
 
   // Decrement products stock in cache
-  const cachedProds = getLocalCache<Product[]>('products') || SEED_PRODUCTS;
   const qtyMap = new Map(items.map((i) => [i.product_id, i.quantity]));
   setLocalCache(
     'products',

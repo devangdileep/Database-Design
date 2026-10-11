@@ -60,6 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
           className="hidden lg:block bg-[#0e1628] border border-purple-900/50 text-slate-200 text-xs font-semibold rounded-lg px-3 py-1.5 focus:outline-none focus:border-purple-500 cursor-pointer"
         >
           <option value="storefront">Storefront View</option>
+          <option value="orders">My Orders & Tracking</option>
           <option value="vendor">Vendor Dashboard</option>
           <option value="admin">Platform Admin</option>
           <option value="checkout">Cart & Atomic Checkout</option>

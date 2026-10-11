@@ -11,6 +11,7 @@ import { VendorDashboard } from '@/components/VendorDashboard';
 import { AdminPortal } from '@/components/AdminPortal';
 import { AtomicCheckoutModal } from '@/components/AtomicCheckoutModal';
 import { AddProductModal } from '@/components/AddProductModal';
+import { OrdersPage } from '@/components/OrdersPage';
 import {
   Product,
   Customer,
@@ -228,13 +229,19 @@ export default function Home() {
                   onRemoveItem={handleRemoveItem}
                   onClearCart={handleClearCart}
                   onOrderComplete={reloadProducts}
+                  onNavigateToOrders={() => setCurrentTab('orders')}
+                  onNavigateToStorefront={() => setCurrentTab('storefront')}
                 />
               )}
 
-              {(currentTab === 'wishlist' || currentTab === 'profile' || currentTab === 'orders' || currentTab === 'settings') && (
+              {currentTab === 'orders' && (
+                <OrdersPage onNavigateToStorefront={() => setCurrentTab('storefront')} />
+              )}
+
+              {(currentTab === 'wishlist' || currentTab === 'profile' || currentTab === 'settings') && (
                 <div className="glass-card p-12 text-center text-slate-400 space-y-3 max-w-xl mx-auto">
                   <h3 className="font-heading font-bold text-xl text-slate-200 capitalize">{currentTab} Section</h3>
-                  <p className="text-xs">Manage your personal settings, addresses, and order history.</p>
+                  <p className="text-xs">Manage your personal settings, addresses, and account preferences.</p>
                   <button
                     onClick={() => setCurrentTab('storefront')}
                     className="gradient-btn px-4 py-2 rounded-xl text-xs font-semibold"
